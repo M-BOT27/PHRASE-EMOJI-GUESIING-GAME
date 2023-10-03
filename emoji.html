@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guess the Emoji Phrase</title>
+
+    <!-- Add custom fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Indie+Flower&display=swap" rel="stylesheet">
+
+    <!-- Add CSS styles -->
+    <style>
+        /* Dark theme */
+        body {
+            font-family: 'Open Sans', sans-serif;
+            background-color: #222;
+            color: #fff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 400px;
+        }
+
+        h1 {
+            font-family: 'Indie Flower', cursive;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        #emoji-display {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+            border: none;
+            border-radius: 1rem;
+            margin-top: 0.5rem;
+            outline: none;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+            cursor: pointer;
+            background-color: #1E90FF;
+            color: #fff;
+            border: none;
+            border-radius: 1rem; /* Rounded corners */
+            transition: background-color 0.2s;
+            text-decoration: none;
+            margin: 0.5rem;
+        }
+
+        .btn:hover {
+            background-color: #0073e6;
+        }
+
+        .text-2xl {
+            font-size: 1.25rem;
+        }
+
+        .mt-4 {
+            margin-top: 1rem;
+        }
+
+        .bg-yellow-500 {
+            background-color: #FFD700;
+        }
+
+        .hover\:bg-yellow-600:hover {
+            background-color: #FFC500;
+        }
+
+        .focus\:outline-none:focus {
+            outline: none;
+        }
+
+        .animated-emoji {
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Guess the Emoji Phrase</h1>
+        <div id="emoji-display"> 😀🎉🧩</div>
+        <input type="text" id="answer-input" class="mt-2" placeholder="Enter your answer">
+        <button id="answer-button" class="btn mt-2">Answer</button>
+        <button id="hint-button" class="btn mt-2 bg-yellow-500 hover:bg-yellow-600 focus:outline-none">Get Hint</button>
+        <button id="give-up-button" class="btn mt-2 bg-red-500 hover:bg-red-600 focus:outline-none">Give Up</button>
+        <div class="text-2xl text-gray-600 mt-4" id="progress-indicator"></div>
+        <div class="text-gray-600 mt-4">
+            <h2 class="text-lg font-semibold">Guess History:</h2>
+            <ul id="guess-history" class="list-inside list-disc"></ul>
+        </div>
+        <div class="text-2xl text-gray-600 mt-4" id="timer-display"></div>
+        <div class="text-2xl text-gray-600 mt-4" id="high-score-display"></div>
+        <button id="share-button" class="mt-2 btn bg-green-500 hover:bg-green-600 focus:outline-none">Share High Score</button>
+        <button id="exit-button" class="mt-2 btn bg-red-500 hover:bg-red-600 focus:outline-none">Exit Game</button>
+        <div class="text-gray-600 mt-4" id="info">
+            <p>Can you guess the emoji phrase?</p>
+            <p>Score: <span id="score">0</span></p>
+        </div>
+        <div id="share-message" style="display: none;"></div>
+    </div>
+
+    <!-- Add JavaScript code -->
+    <script>
+        let score = 0;
+        let currentQuestionIndex = 0;
+        let timer;
+        let timeLeft = 30; // Initial time for each puzzle
+
+        // Arrays of puzzles, hints, and answers
+        let puzzles = [
+            {
+                emojis: "😀🎉🧩",
+                hint: "Happy Puzzle",
+                answer: "Happy Birthday"
+            },
+            {
+                emojis: "❤️🚀🌟",
+                hint: "Love in the Sky",
+                answer: "Love Story"
+            },
+            {
+                emojis: "🍕🍔🍟",
+                hint: "Fast Food",
+                answer: "Junk Food"
+            },
+            {
+                emojis: "🏖️🌞🏄",
+                hint: "Beach Fun",
+                answer: "Summer Vacation"
+            },
+            {
+                emojis: "🎂🍰🍭",
+                hint: "Sweet Celebration",
+                answer: "Birthday Party"
+            },
+            {
+                emojis: "🌞🏖️🏊‍♂️",
+                hint: "Summer Fun",
+                answer: "Beach Vacation"
+            },
+            {
+                emojis: "🍔🍟🥤",
+                hint: "Fast Food",
+                answer: "Burger and Fries"
+            },
+            {
+                emojis: "🧚‍♂️📘🪄",
+                hint: "Magical Read",
+                answer: "Fairy Tale"
+            },
+            {
+                emojis: "🌍🌊🌿",
+                hint: "Natural Beauty",
+                answer: "Earth Day"
+            },
+            {
+                emojis: "🌲🏞️🚶‍♂️",
+                hint: "Outdoor Adventure",
+                answer: "Hiking Trip"
+            },
+            {
+                emojis: "🐶🐱🐦",
+                hint: "Animal Friends",
+                answer: "Petting Zoo"
+            },
+            {
+                emojis: "🏰👸🤴",
+                hint: "Royal Palace",
+                answer: "Castle"
+            },
+            {
+                emojis: "🌙🌟🌠",
+                hint: "Starry Night",
+                answer: "Galaxy"
+            },
+            {
+                emojis: "🌺🌴🌞",
+                hint: "Tropical Paradise",
+                answer: "Island Getaway"
+            },
+            {
+                emojis: "🚗🛣️🗺️",
+                hint: "Road Trip",
+                answer: "Travel Adventure"
+            },
+            {
+                emojis: "🦁🐘🦒",
+                hint: "Wild Safari",
+                answer: "Zoo"
+            },
+            {
+                emojis: "🏕️🌌🔥",
+                hint: "Campfire Tales",
+                answer: "Camping Trip"
+            },
+            {
+                emojis: "🎉🍰🎁",
+                hint: "Birthday Celebration",
+                answer: "Party"
+            },
+            {
+                emojis: "🌆🏙️🌃",
+                hint: "City Lights",
+                answer: "Metropolis"
+            },
+            {
+                emojis: "📚✏️📓",
+                hint: "School Days",
+                answer: "Education"
+            },
+            {
+                emojis: "🌄🏞️🌅",
+                hint: "Mountain Sunrise",
+                answer: "Scenic View"
+            },
+            {
+                emojis: "🚀🌌👨‍🚀",
+                hint: "Space Adventure",
+                answer: "Astronaut"
+            },
+            {
+                emojis: "🍎📚🎓",
+                hint: "Learning Journey",
+                answer: "School"
+            },
+            {
+                emojis: "🌊🏄‍♂️🏝️",
+                hint: "Surfing Paradise",
+                answer: "Beach"
+            },
+            {
+                emojis: "🧮🔢📏",
+                hint: "Math Challenge",
+                answer: "Mathematics"
+            }
+            {
+                emojis: "🍕🍦🍰",
+                hint: "Dessert Delight",
+                answer: "Sweet Treats"
+            },
+            {
+                emojis: "🎃👻🍬",
+                hint: "Halloween Fun",
+                answer: "Trick or Treat"
+            },
+            {
+                emojis: "🌸🌼🌷",
+                hint: "Flower Garden",
+                answer: "Botanical Park"
+            },
+            {
+                emojis: "🎮🕹️👾",
+                hint: "Gaming Night",
+                answer: "Video Games"
+            },
+            {
+                emojis: "🧞‍♂️🌟🧰",
+                hint: "Wish Fulfillment",
+                answer: "Genie in a Bottle"
+            },
+            {
+                emojis: "🍹🌴🏖️",
+                hint: "Tropical Drink",
+                answer: "Cocktail on the Beach"
+            },
+            {
+                emojis: "🌵☀️🐍",
+                hint: "Desert Adventure",
+                answer: "Safari"
+            },
+            {
+                emojis: "🏰🛡️👑",
+                hint: "Medieval Times",
+                answer: "Knight in Shining Armor"
+            },
+            {
+                emojis: "🚢🏝️🌅",
+                hint: "Cruise Vacation",
+                answer: "Sailing at Sunset"
+            },
+            {
+                emojis: "🚴🍃🚵",
+                hint: "Cycling Journey",
+                answer: "Bike Ride in the Park"
+            },
+            {
+                emojis: "🎨🖌️🖼️",
+                hint: "Artistic Expression",
+                answer: "Painting Masterpiece"
+            },
+            {
+                emojis: "🎈🎁🥳",
+                hint: "Party Time",
+                answer: "Birthday Bash"
+            },
+            {
+                emojis: "📸📷🌄",
+                hint: "Photography Passion",
+                answer: "Taking Stunning Photos"
+            },
+            {
+                emojis: "🍁🍂🍃",
+                hint: "Autumn Vibes",
+                answer: "Fall Leaves"
+            },
+            {
+                emojis: "🎤🎶🎵",
+                hint: "Musical Talent",
+                answer: "Singing Karaoke"
+            },
+            {
+                emojis: "🔭🌌🪐",
+                hint: "Stargazing Night",
+                answer: "Exploring the Cosmos"
+            },
+            {
+                emojis: "🍝🍷🕯️",
+                hint: "Romantic Dinner",
+                answer: "Candlelit Italian Meal"
+            },
+            {
+                emojis: "🚤🏞️🌊",
+                hint: "Boat Adventure",
+                answer: "Sailing on the Lake"
+            },
+            {
+                emojis: "🌆🎇🌃",
+                hint: "Fireworks Spectacle",
+                answer: "City Fireworks Show"
+            },
+            {
+                emojis: "🛌😴🌙",
+                hint: "Goodnight Routine",
+                answer: "Bedtime Sleep"
+            }
+            {
+                emojis: "🔥🍕❤️",
+                hint: "Love at First Bite",
+                answer: "Pizza My Heart"
+            },
+            {
+                emojis: "🌈🌧️☔",
+                hint: "Every Cloud Has a Silver Lining",
+                answer: "Rainbow After the Rain"
+            },
+            {
+                emojis: "🎉🎈🎂",
+                hint: "Party Animal",
+                answer: "Life of the Party"
+            },
+            {
+                emojis: "🌞🏖️🌴",
+                hint: "Chasing the Sun",
+                answer: "Beach Bum"
+            },
+            {
+                emojis: "🧊🍋🍹",
+                hint: "Cool as a Cucumber",
+                answer: "Chill Out"
+            },
+            {
+                emojis: "🍀🐇🎩",
+                hint: "Lucky Charm",
+                answer: "Rabbit's Foot"
+            },
+            {
+                emojis: "📚🌃🦉",
+                hint: "Night Owl",
+                answer: "Bookworm"
+            },
+            {
+                emojis: "🌇🏙️🏢",
+                hint: "Concrete Jungle",
+                answer: "Cityscape"
+            },
+            {
+                emojis: "🔨🏠🛠️",
+                hint: "Home Improvement",
+                answer: "Fixer-Upper"
+            },
+            {
+                emojis: "🔑🌻🚪",
+                hint: "Golden Opportunity",
+                answer: "Key to Happiness"
+            },
+            {
+                emojis: "🌆🌇🌅",
+                hint: "Sunrise to Sunset",
+                answer: "Day and Night"
+            },
+            {
+                emojis: "🌊🐚🏄‍♂️",
+                hint: "Riding the Waves",
+                answer: "Surf's Up"
+            },
+            {
+                emojis: "🌮🌯🍛",
+                hint: "Foodie Paradise",
+                answer: "Taste of Heaven"
+            },
+            {
+                emojis: "🚗🛣️🗺️",
+                hint: "On the Road Again",
+                answer: "Travel Bug"
+            },
+            {
+                emojis: "🐢🐇🏁",
+                hint: "Slow and Steady Wins the Race",
+                answer: "Tortoise and the Hare"
+            },
+            {
+                emojis: "🔍🧩🕵️‍♂️",
+                hint: "Solving the Puzzle",
+                answer: "Finding Clues"
+            },
+            {
+                emojis: "📞☕🥄",
+                hint: "Coffee Break",
+                answer: "Phone a Friend"
+            },
+            {
+                emojis: "🐦🌲🎵",
+                hint: "Singing in the Woods",
+                answer: "Birdsong in the Forest"
+            },
+            {
+                emojis: "🌠🌌🔭",
+                hint: "Starry Night",
+                answer: "Under the Stars"
+            },
+            {
+                emojis: "🌟💫✨",
+                hint: "Shining Bright",
+                answer: "Star Power"
+            }
+            
+            
+            
+            // Add more puzzles here
+        ];
+
+        // Function to display the current puzzle
+        function displayPuzzle() {
+            const emojiDisplay = document.getElementById("emoji-display");
+            emojiDisplay.textContent = puzzles[currentQuestionIndex].emojis;
+        }
+
+        // Function to handle the "Answer" button click
+        function handleAnswerButtonClick() {
+            const answerInput = document.getElementById("answer-input");
+            const userAnswer = answerInput.value.trim();
+
+            if (userAnswer.toLowerCase() === puzzles[currentQuestionIndex].answer.toLowerCase()) {
+                score++;
+                currentQuestionIndex++;
+                answerInput.value = "";
+                updateScore();
+                if (currentQuestionIndex < puzzles.length) {
+                    displayPuzzle();
+                    startTimer();
+                } else {
+                    alert("Congratulations! You've completed all the phrases.");
+                    currentQuestionIndex = 0;
+                    score = 0;
+                    updateScore();
+                    displayPuzzle();
+                    resetTimer();
+                }
+            } else {
+                alert("Incorrect! Try again.");
+            }
+        }
+
+        // Function to update the score
+        function updateScore() {
+            const scoreDisplay = document.getElementById("score");
+            scoreDisplay.textContent = score;
+        }
+
+        // Attach a click event listener to the "Answer" button
+        const answerButton = document.getElementById("answer-button");
+        answerButton.addEventListener("click", handleAnswerButtonClick);
+
+        // Function to handle the "Hint" button click
+        function handleHintButtonClick() {
+            const hintMessage = `Hint: ${puzzles[currentQuestionIndex].hint}`;
+            alert(hintMessage);
+        }
+
+        // Attach a click event listener to the "Hint" button
+        const hintButton = document.getElementById("hint-button");
+        hintButton.addEventListener("click", handleHintButtonClick);
+
+        // Function to handle the "Give Up" button click
+        function handleGiveUpButtonClick() {
+            alert(`The correct answer is: ${puzzles[currentQuestionIndex].answer}`);
+            currentQuestionIndex++;
+            updateScore();
+            if (currentQuestionIndex < puzzles.length) {
+                displayPuzzle();
+                startTimer();
+            } else {
+                alert("Congratulations! You've completed all the phrases.");
+                currentQuestionIndex = 0;
+                score = 0;
+                updateScore();
+                displayPuzzle();
+                resetTimer();
+            }
+        }
+
+        // Attach a click event listener to the "Give Up" button
+        const giveUpButton = document.getElementById("give-up-button");
+        giveUpButton.addEventListener("click", handleGiveUpButtonClick);
+
+        // Function to start the timer
+        function startTimer() {
+            clearInterval(timer);
+            timeLeft = 30;
+            updateTimerDisplay();
+            timer = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+                if (timeLeft === 0) {
+                    clearInterval(timer);
+                    alert("Time's up! Try the next one.");
+                    currentQuestionIndex++;
+                    updateScore();
+                    if (currentQuestionIndex < puzzles.length) {
+                        displayPuzzle();
+                        startTimer();
+                    } else {
+                        alert("Congratulations! You've completed all the phrases.");
+                        currentQuestionIndex = 0;
+                        score = 0;
+                        updateScore();
+                        displayPuzzle();
+                        resetTimer();
+                    }
+                }
+            }, 1000);
+        }
+
+        // Function to reset the timer
+        function resetTimer() {
+            clearInterval(timer);
+            timeLeft = 30;
+            updateTimerDisplay();
+        }
+
+        // Function to update the timer display
+        function updateTimerDisplay() {
+            const timerDisplay = document.getElementById("timer-display");
+            timerDisplay.textContent = `Time Left: ${timeLeft} s`;
+        }
+
+        // Display the first puzzle
+        displayPuzzle();
+        startTimer();
+
+        // Function to handle the "Share High Score" button click
+        function handleShareButtonClick() {
+            const shareMessage = `My high score is ${score}. Can you beat it?`;
+            alert(shareMessage);
+        }
+
+        // Attach a click event listener to the "Share High Score" button
+        const shareButton = document.getElementById("share-button");
+        shareButton.addEventListener("click", handleShareButtonClick);
+
+        // Function to handle the "Exit Game" button click
+        function handleExitButtonClick() {
+            if (confirm("Are you sure you want to exit the game? Your progress will be lost.")) {
+                currentQuestionIndex = 0;
+                score = 0;
+                updateScore();
+                displayPuzzle();
+                resetTimer();
+            }
+        }
+
+        // Attach a click event listener to the "Exit Game" button
+        const exitButton = document.getElementById("exit-button");
+        exitButton.addEventListener("click", handleExitButtonClick);
+
+        // Function to update the progress indicator
+        function updateProgressIndicator() {
+            const progressIndicator = document.getElementById("progress-indicator");
+            progressIndicator.textContent = `Puzzle ${currentQuestionIndex + 1} of ${puzzles.length}`;
+        }
+
+        // Update the progress indicator initially
+        updateProgressIndicator();
+    </script>
+</body>
+</html>
